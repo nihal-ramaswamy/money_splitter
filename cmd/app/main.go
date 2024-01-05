@@ -1,17 +1,25 @@
 package main
 
 import (
+	healthcheck_api "money_splitter/internal/api/health_check"
+	server_config "money_splitter/internal/server_config"
+
 	"github.com/gin-gonic/gin"
+	"go.uber.org/fx"
 )
 
 func main() {
+
+	config := server_config.New(
+		server_config.WithPort(":8080"),
+	)
+
 	server := gin.Default()
 
-	server.GET("/health_check", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "ok",
-		})
-	})
+	server.GET("/health_check", healthcheck_api.HealthCheckHandler())
 
-	server.Run(":8080")
+	fx.New(
+		fx.Invoke(
+			server.Run(config.Port)),
+	).Run()
 }
