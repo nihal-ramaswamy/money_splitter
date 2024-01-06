@@ -19,16 +19,16 @@ It is recommended to use docker to run the app. If you don't have docker install
 #### Running on your machine
 1. [Go](https://golang.org/dl/)
 2. [Make](https://www.gnu.org/software/make/)
-3. [Postgres](https://www.postgresql.org/download/)
+3. [PostgreSQL](https://www.postgresql.org/download/)
 
 ---
 
 ## Running the app
 You can use docker to run the app or run it directly on your machine.
 ### Running with Docker
-- Run `./start.sh` to start the server
+- Run [`./start.sh`](./start.sh) to start the server
 - Ensure to run `chmod +x start.sh` if you get a permission error
-- Ensure that the [`docker-compose`](https://docs.docker.com/compose/) cli-plugin is in the same path mentioned in the `start.sh` file
+- Ensure that the [`docker-compose`](https://docs.docker.com/compose/) plugin is in the same path mentioned in the `start.sh` file
 ### Running on your machine
 - Run `make run` to start the server
 
