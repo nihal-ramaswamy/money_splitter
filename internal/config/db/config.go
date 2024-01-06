@@ -67,3 +67,7 @@ func GetPsqlInfo(config *Config) string {
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
 
 }
+
+func GetPsqlInfoDefault() string {
+	return GetPsqlInfo(Default())
+}
