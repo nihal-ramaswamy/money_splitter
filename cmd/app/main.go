@@ -8,19 +8,34 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"go.uber.org/fx"
 	"log"
+	"os"
 )
+
+func getDotEnvVariable(key string) string {
+
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	fmt.Println("key: ", key, "value: ", os.Getenv(key))
+
+	return os.Getenv(key)
+}
 
 func main() {
 	// Connection to database
 	db_config := db_config.New(
-		db_config.WithHost("host.docker.internal"),
-		db_config.WithPort("5432"),
-		db_config.WithUser("postgres"),
-		db_config.WithPassword("postgres"),
-		db_config.WithDbname("money_splitter"),
+		db_config.WithHost(getDotEnvVariable("DB_HOST")),
+		db_config.WithPort(getDotEnvVariable("DB_PORT")),
+		db_config.WithUser(getDotEnvVariable("DB_USER")),
+		db_config.WithPassword(getDotEnvVariable("DB_PASSWORD")),
+		db_config.WithDbname(getDotEnvVariable("DB_NAME")),
 	)
 
 	psqlIfo := fmt.Sprintf(
@@ -29,7 +44,6 @@ func main() {
 
 	log.Println("Connecting to database...")
 	db, err := sql.Open("postgres", psqlIfo)
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +58,7 @@ func main() {
 	// Connecting to server
 	log.Println("Connecting to server...")
 	server_config := server_config.New(
-		server_config.WithPort(":8080"),
+		server_config.WithPort(":" + getDotEnvVariable("SERVER_PORT")),
 	)
 
 	server := gin.Default()
