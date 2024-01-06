@@ -1,5 +1,10 @@
 package db_config
 
+import (
+	"fmt"
+	utils "money_splitter/internal/utils"
+)
+
 type Config struct {
 	Host     string
 	Port     string
@@ -44,4 +49,21 @@ func WithDbname(dbname string) func(*Config) {
 	return func(c *Config) {
 		c.Dbname = dbname
 	}
+}
+
+func Default() *Config {
+	return New(
+		WithHost(utils.GetDotEnvVariable("DB_HOST")),
+		WithPort(utils.GetDotEnvVariable("DB_PORT")),
+		WithUser(utils.GetDotEnvVariable("DB_USER")),
+		WithPassword(utils.GetDotEnvVariable("DB_PASSWORD")),
+		WithDbname(utils.GetDotEnvVariable("DB_NAME")),
+	)
+}
+
+func GetPsqlInfo(config *Config) string {
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		config.Host, config.Port, config.User, config.Password, config.Dbname)
+
 }
