@@ -6,7 +6,7 @@ App to split money between friends and family. Based on the [Splitwise](https://
 ## Table of Contents
 - [Installation and Setup Instructions](#installation-and-setup-instructions)  
 - [Running the app](#running-the-app)  
-
+- [API Documentation](#api-documentation)  
 ---
 
 ## Installation and Setup Instructions
@@ -33,3 +33,10 @@ You can use docker to run the app or run it directly on your machine.
 - Run `make run` to start the server
 
 ---
+
+## API Documentation
+### Health Check
+```http
+GET /health_check
+```
+A simple API to test out whether the server is up and running.
