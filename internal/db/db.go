@@ -24,3 +24,32 @@ func GetDbInstanceWithDefaultConfig() *sql.DB {
 
 	return db
 }
+
+func GetAllEmails(db *sql.DB) []string {
+	if db == nil {
+		panic("db cannot be nil")
+	}
+
+	query := `SELECT ID, EMAIL FROM "USER"`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var emails []string
+	for rows.Next() {
+		var id string
+		var email string
+
+		err := rows.Scan(&id, &email)
+		if err != nil {
+			panic(err)
+		}
+
+		emails = append(emails, email)
+	}
+
+	return emails
+}

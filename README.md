@@ -40,3 +40,15 @@ You can use docker to run the app or run it directly on your machine.
 GET /health_check
 ```
 A simple API to test out whether the server is up and running.
+
+### Authentication
+#### Register
+```http
+POST /auth/register
+```
+Endpoint to register a new user. Ensures that the user with same email is not already registered and then creates a new user.
+```json
+{
+"message": "Inserted user with id " + id + " successfully"
+}
+```
