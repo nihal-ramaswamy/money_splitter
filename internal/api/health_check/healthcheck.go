@@ -9,3 +9,12 @@ func HealthCheckHandler() gin.HandlerFunc {
 		})
 	}
 }
+
+func HealthCheckHandlerAuth() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"email":   ctx.GetString("email"),
+		})
+	}
+}

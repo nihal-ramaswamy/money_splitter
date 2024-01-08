@@ -7,6 +7,7 @@ App to split money between friends and family. Based on the [Splitwise](https://
 - [Installation and Setup Instructions](#installation-and-setup-instructions)  
 - [Running the app](#running-the-app)  
 - [API Documentation](#api-documentation)  
+- [Todo](#todo)
 ---
 
 ## Installation and Setup Instructions
@@ -41,14 +42,55 @@ GET /health_check
 ```
 A simple API to test out whether the server is up and running.
 
+```http
+GET /health_check_auth
+
+Headers:
+Authorization: <token>
+```
+A simple API to test out whether you are authorized.
+
+
+
 ### Authentication
 #### Register
 ```http
 POST /auth/register
-```
-Endpoint to register a new user. Ensures that the user with same email is not already registered and then creates a new user.
-```json
-{
-"message": "Inserted user with id " + id + " successfully"
+
+body: {
+  name: string
+  "email": string,
+  "password": string
+  }
 }
 ```
+Endpoint to register a new user. Ensures that the user with same email is not already registered and then creates a new user with a `Status Accepted` response.
+```json
+{
+  "id": string
+}
+```
+#### Login 
+```http
+POST /auth/login
+
+body: {
+  "email": string,
+  "password": string
+}
+```
+Endpoint to login a user. Returns a JWT token which can be used to authenticate the user for other APIs.
+```json
+{
+  "token": string
+}
+```
+
+## Todo 
+- [ ] Add jwt redis authentication
+- [ ] Endpoints to
+  - [ ] Create a group
+  - [ ] Add a user to a group
+  - [ ] Manage and view expenses
+  - [ ] View balances
+

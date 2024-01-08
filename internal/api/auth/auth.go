@@ -3,6 +3,7 @@ package auth_api
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"log"
 	db_utils "money_splitter/internal/db"
 	dto "money_splitter/internal/dto"
@@ -18,32 +19,52 @@ func NewUserHandler(db *sql.DB) func(c *gin.Context) {
 
 	return func(c *gin.Context) {
 		var user dto.User
-		var id string
 
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.Error(err)
 			c.AbortWithStatus(http.StatusBadRequest)
 		}
 
-		emails := db_utils.GetAllEmails(db)
+		if db_utils.DoesEmailExist(db, user.Email) {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"error": fmt.Sprintf("User with email %s already exists", user.Email)})
 
-		for _, email := range emails {
-			if email == user.Email {
-				c.JSON(http.StatusBadRequest,
-					gin.H{"error": fmt.Sprintf("User with email %s already exists", user.Email)})
-			}
 		}
 
-		user = user.HashAndSalt()
+		id := db_utils.RegisterNewUser(db, user)
 
-		err := db.QueryRow("INSERT INTO \"USER\" (NAME, EMAIL, PASSWORD, IS_VERIFIED) VALUES ($1, $2, $3, $4) RETURNING ID",
-			user.Name, user.Email, user.Password, false).Scan(&id)
+		c.JSON(http.StatusAccepted, gin.H{"id": id})
 
+	}
+}
+
+func LoginUserHandler(db *sql.DB) func(c *gin.Context) {
+	if db == nil {
+		log.Panic("db cannot be nil")
+	}
+	return func(c *gin.Context) {
+		var user dto.User
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.Error(err)
+			c.AbortWithStatus(http.StatusBadRequest)
+		}
+		if !db_utils.DoesEmailExist(db, user.Email) {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"error": fmt.Sprintf("User with email %s does not exist", user.Email)})
+			return
+		}
+
+		if !db_utils.DoesPasswordMatch(db, user) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
+		token, err := db_utils.GenerateToken(user)
 		if err != nil {
-			log.Panic(err)
+			c.Error(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 		}
 
-		c.JSON(http.StatusAccepted, gin.H{"message": "Inserted user with id " + id + " successfully"})
-
+		c.JSON(http.StatusAccepted, gin.H{"token": token})
 	}
 }
