@@ -1,28 +1,30 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"log"
-	db_config "money_splitter/internal/config/db"
+	db_config_postgres "money_splitter/internal/config/db/postgres"
+	db_config_redis "money_splitter/internal/config/db/redis"
 	dto "money_splitter/internal/dto"
-	"money_splitter/internal/utils"
-	"time"
 
-	"github.com/golang-jwt/jwt"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetDbInstanceWithDefaultConfig() *sql.DB {
-	psqlIfo := db_config.GetPsqlInfoDefault()
+var Ctx = context.Background()
+
+func GetPostgresDbInstanceWithDefaultConfig() *sql.DB {
+	psqlInfo := db_config_postgres.GetPsqlInfoDefault()
 
 	log.Println("Connecting to database...")
-	db, err := sql.Open("postgres", psqlIfo)
+	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Pinging database...")
+	log.Println("Pinging postgres...")
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
@@ -31,24 +33,25 @@ func GetDbInstanceWithDefaultConfig() *sql.DB {
 	return db
 }
 
-func selectAllWhereEmailIs(db *sql.DB, email string) (dto.User, error) {
-	if db == nil {
-		panic("db cannot be nil")
+func GetRedisDbInstanceWithDefaultConfig() *redis.Client {
+	redisInfo := db_config_redis.Default()
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisInfo.Addr,
+		Password: redisInfo.Password,
+		DB:       redisInfo.DB,
+	})
+
+	log.Println("Pinging redis...")
+	if err := rdb.Ping(Ctx).Err(); err != nil {
+		log.Fatal(err)
 	}
 
-	var user dto.User
-	query := `SELECT * FROM "USER" WHERE EMAIL = $1`
-	err := db.QueryRow(query, email).Scan(&user)
-
-	if err != nil {
-		return user, err
-	}
-
-	return user, err
+	return rdb
 }
 
 func DoesEmailExist(db *sql.DB, email string) bool {
-	_, err := selectAllWhereEmailIs(db, email)
+	_, err := selectAllFromUserWhereEmailIs(db, email)
 	return err != sql.ErrNoRows
 }
 
@@ -57,8 +60,7 @@ func RegisterNewUser(db *sql.DB, user dto.User) string {
 	var id string
 	user = user.HashAndSalt()
 
-	err := db.QueryRow("INSERT INTO \"USER\" (NAME, EMAIL, PASSWORD, IS_VERIFIED) VALUES ($1, $2, $3, $4) RETURNING ID",
-		user.Name, user.Email, user.Password, false).Scan(&id)
+	id, err := insertIntoUser(db, user)
 
 	if err != nil {
 		log.Panic(err)
@@ -72,9 +74,7 @@ func DoesPasswordMatch(db *sql.DB, user dto.User) bool {
 		log.Panic("db cannot be nil")
 	}
 
-	var password string
-	query := `SELECT PASSWORD FROM "USER" WHERE EMAIL = $1`
-	err := db.QueryRow(query, user.Email).Scan(&password)
+	password, err := selectPasswordFromUserWhereEmailIDs(db, user.Email)
 
 	if err != nil {
 		log.Panic(err)
@@ -82,18 +82,4 @@ func DoesPasswordMatch(db *sql.DB, user dto.User) bool {
 	}
 
 	return bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password)) == nil
-}
-
-func GenerateToken(user dto.User) (string, error) {
-	secret := utils.GetDotEnvVariable("SECRET_KEY")
-
-	var signingKey = []byte(secret)
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-
-	claims["authorized"] = true
-	claims["email"] = user.Email
-	claims["exp"] = time.Now().Add(time.Minute * 60 * 60 * 24 * 365).Unix()
-
-	return token.SignedString(signingKey)
 }

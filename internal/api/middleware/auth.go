@@ -7,16 +7,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/redis/go-redis/v9"
+
+	db_utils "money_splitter/internal/db"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 	secret := utils.GetDotEnvVariable("SECRET_KEY")
 	signingKey := []byte(secret)
 
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("Authorization")
-		if token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No authorization header provided"})
+		token, err := c.Cookie("token")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "No token found"})
 			return
 		}
 
@@ -27,6 +30,14 @@ func AuthMiddleware() gin.HandlerFunc {
 			return signingKey, nil
 		})
 
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		email := parsedToken.Claims.(jwt.MapClaims)["email"].(string)
+
+		_, err = rdb.Get(db_utils.Ctx, email).Result()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return

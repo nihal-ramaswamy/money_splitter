@@ -87,7 +87,8 @@ Endpoint to login a user. Returns a JWT token which can be used to authenticate 
 ```
 
 ## Todo 
-- [ ] Add jwt redis authentication
+- [x] Add jwt redis authentication
+- [ ] Add refresh token functionality
 - [ ] Endpoints to
   - [ ] Create a group
   - [ ] Add a user to a group

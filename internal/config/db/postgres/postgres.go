@@ -1,7 +1,8 @@
-package db_config
+package db_config_postgres
 
 import (
 	"fmt"
+	"money_splitter/internal/constants"
 	utils "money_splitter/internal/utils"
 )
 
@@ -53,11 +54,11 @@ func WithDbname(dbname string) func(*Config) {
 
 func Default() *Config {
 	return New(
-		WithHost(utils.GetDotEnvVariable("DB_HOST")),
-		WithPort(utils.GetDotEnvVariable("DB_PORT")),
-		WithUser(utils.GetDotEnvVariable("DB_USER")),
-		WithPassword(utils.GetDotEnvVariable("DB_PASSWORD")),
-		WithDbname(utils.GetDotEnvVariable("DB_NAME")),
+		WithHost(utils.GetDotEnvVariable(constants.POSTGRES_HOST)),
+		WithPort(utils.GetDotEnvVariable(constants.POSTGRES_PORT)),
+		WithUser(utils.GetDotEnvVariable(constants.POSTGRES_USER)),
+		WithPassword(utils.GetDotEnvVariable(constants.POSTGRES_PASSWORD)),
+		WithDbname(utils.GetDotEnvVariable(constants.POSTGRES_NAME)),
 	)
 }
 
