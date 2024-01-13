@@ -68,7 +68,7 @@ func LoginUserHandler(pdb *sql.DB, rdb *redis.Client) func(c *gin.Context) {
 		}
 
 		c.SetCookie(
-			"token",
+			user.Email,
 			token,
 			int(constants.TOKEN_EXPIRY_TIME),
 			"/",
@@ -78,6 +78,23 @@ func LoginUserHandler(pdb *sql.DB, rdb *redis.Client) func(c *gin.Context) {
 		)
 
 		rdb.Set(db_utils.Ctx, user.Email, token, constants.TOKEN_EXPIRY_TIME)
+
+		c.JSON(http.StatusAccepted, gin.H{"message": "ok"})
+	}
+}
+
+func LogoutUserHandler(rdb *redis.Client) func(c *gin.Context) {
+	if rdb == nil {
+		log.Panic("db cannot be nil")
+	}
+
+	return func(c *gin.Context) {
+		email := c.GetString("email")
+		_, err := rdb.Del(db_utils.Ctx, email).Result()
+
+		if err != nil {
+			log.Panic("Error deleting token from rdb")
+		}
 
 		c.JSON(http.StatusAccepted, gin.H{"message": "ok"})
 	}

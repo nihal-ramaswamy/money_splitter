@@ -85,6 +85,17 @@ Endpoint to login a user. Returns a JWT token which can be used to authenticate 
   "token": string
 }
 ```
+#### Logout 
+```http
+POST /auth/logout
+```
+Endpoint to log user out. Deletes JWT token from redis db to invalidate token. 
+```json
+{
+  "message": "ok"
+}
+```
+
 
 ## Todo 
 - [x] Add jwt redis authentication

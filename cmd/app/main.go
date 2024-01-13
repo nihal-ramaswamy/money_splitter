@@ -35,5 +35,10 @@ func main() {
 		auth.POST("/login", auth_api.LoginUserHandler(pdb, rdb))
 	}
 
+	auth2 := server.Group("/auth", middleware.AuthMiddleware(rdb))
+	{
+		auth2.POST("/logout", auth_api.LogoutUserHandler(rdb))
+	}
+
 	server.Run(server_config.Port)
 }
