@@ -55,6 +55,10 @@ func DoesEmailExist(db *sql.DB, email string) bool {
 	return err != sql.ErrNoRows
 }
 
+func GetUserFromEmail(db *sql.DB, email string) (dto.User, error) {
+	return selectAllFromUserWhereEmailIs(db, email)
+}
+
 func RegisterNewUser(db *sql.DB, user dto.User) string {
 
 	var id string
@@ -82,4 +86,15 @@ func DoesPasswordMatch(db *sql.DB, user dto.User) bool {
 	}
 
 	return bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password)) == nil
+}
+
+func RegisterNewGroup(db *sql.DB, group dto.Group) string {
+	var id string
+	id, err := insertIntoGroup(db, group)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return id
 }

@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"money_splitter/internal/utils"
 	"net/http"
 
@@ -12,7 +14,7 @@ import (
 	db_utils "money_splitter/internal/db"
 )
 
-func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
+func AuthMiddleware(pdb *sql.DB, rdb *redis.Client) gin.HandlerFunc {
 	secret := utils.GetDotEnvVariable("SECRET_KEY")
 	signingKey := []byte(secret)
 
@@ -43,8 +45,15 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		user, err := db_utils.GetUserFromEmail(pdb, email)
+
+		if err != nil {
+			log.Panic(err)
+		}
+
 		if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
 			c.Set("email", claims["email"])
+			c.Set("userID", user.ID)
 			c.Set("authenticated", true)
 		}
 

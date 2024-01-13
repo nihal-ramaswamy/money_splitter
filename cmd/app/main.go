@@ -2,6 +2,7 @@ package main
 
 import (
 	auth_api "money_splitter/internal/api/auth"
+	group_api "money_splitter/internal/api/group"
 	healthcheck_api "money_splitter/internal/api/health_check"
 	"money_splitter/internal/api/middleware"
 	server_config "money_splitter/internal/config/server"
@@ -27,7 +28,7 @@ func main() {
 
 	// Routes
 	server.GET("/health_check", healthcheck_api.HealthCheckHandler())
-	server.GET("/health_check_auth", middleware.AuthMiddleware(rdb), healthcheck_api.HealthCheckHandlerAuth())
+	server.GET("/health_check_auth", middleware.AuthMiddleware(pdb, rdb), healthcheck_api.HealthCheckHandlerAuth())
 
 	auth := server.Group("/auth")
 	{
@@ -35,9 +36,14 @@ func main() {
 		auth.POST("/login", auth_api.LoginUserHandler(pdb, rdb))
 	}
 
-	auth2 := server.Group("/auth", middleware.AuthMiddleware(rdb))
+	auth2 := server.Group("/auth", middleware.AuthMiddleware(pdb, rdb))
 	{
 		auth2.POST("/logout", auth_api.LogoutUserHandler(rdb))
+	}
+
+	group := server.Group("/group", middleware.AuthMiddleware(pdb, rdb))
+	{
+		group.POST("/newGroup", group_api.NewGroupHandler(pdb, rdb))
 	}
 
 	server.Run(server_config.Port)

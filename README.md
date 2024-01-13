@@ -21,6 +21,7 @@ It is recommended to use docker to run the app. If you don't have docker install
 1. [Go](https://golang.org/dl/)
 2. [Make](https://www.gnu.org/software/make/)
 3. [PostgreSQL](https://www.postgresql.org/download/)
+4. [Redis](https://redis.io/)
 
 ---
 
@@ -96,6 +97,25 @@ Endpoint to log user out. Deletes JWT token from redis db to invalidate token.
 }
 ```
 
+### Group 
+#### New Group 
+```http
+POST /group/newGroup
+
+{
+  "group_name": string,
+  "simplify_txn": bool
+}
+
+```
+Endpoint to create new group. Returns newly created group ID. 
+```json
+{
+  "id": string
+}
+```
+
+---
 
 ## Todo 
 - [x] Add jwt redis authentication
